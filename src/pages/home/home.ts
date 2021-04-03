@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { ToastController } from 'ionic-angular';
 import { AlertController } from 'ionic-angular';
+import { GroceriesServiceProvider } from '../../providers/groceries-service/groceries-service';
 
 
 @Component({
@@ -12,27 +13,12 @@ export class HomePage {
 
   title = "Grocery";
 
-  items = [
-    {
-      name: "Oat Milk",
-      quantity: 1    
-    },
-    {
-      name: "Banana Bread",
-      quantity: 1    
-    },
-    {
-      name: "Kiwi",
-      quantity: 3    
-    },
-    {
-      name: "Brown Sugar",
-      quantity: 1    
-    },
-  ];
+  constructor(public navCtrl: NavController, public toastCtrl: ToastController, public alertCtrl: AlertController, public dataService: GroceriesServiceProvider) {
 
-  constructor(public navCtrl: NavController, public toastCtrl: ToastController, public alertCtrl: AlertController) {
+  }
 
+  loadItems() {
+    return this.dataService.getItems();
   }
 
   removeItem(item, index) {
@@ -43,8 +29,18 @@ export class HomePage {
     });
     toast.present();
 
-    this.items.splice(index, 1);
+    this.dataService.removeItem(index);  
   }
+
+  editItem(item, index) {
+    console.log("Edit Item - ", item, index);
+    const toast = this.toastCtrl.create({
+      message: 'Editing Item - ' + index + " ...",
+      duration: 3000
+    });
+    toast.present();
+    this.showEditItemPrompt(item, index);
+  }  
 
   addItem() {
     console.log("Adding Item");
@@ -76,12 +72,47 @@ export class HomePage {
           text: 'Save',
           handler: item => {
             console.log('Saved clicked', item);
-            this.items.push(item);
+            this.dataService.addItem(item);
           }
         }
       ]
     });
     prompt.present();
   }
+
+  showEditItemPrompt(item, index) {
+    const prompt = this.alertCtrl.create({
+      title: 'Edit Item',
+      message: "Please edit item...",
+      inputs: [
+        {
+          name: 'name',
+          placeholder: 'Name',
+          value: item.name
+        },
+        {
+          name: 'quantity',
+          placeholder: 'Quantity',
+          value: item.quantity
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          handler: data => {
+            console.log('Cancel clicked');
+          }
+        },
+        {
+          text: 'Save',
+          handler: item => {
+            console.log('Saved clicked', item);
+            this.dataService.editItem(item, index);   
+          }
+        }
+      ]
+    });
+    prompt.present();
+  }  
 
 }
